@@ -4,6 +4,8 @@ import java.util.List;
 import javafx.application.*;
 import javafx.scene.*;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.*;
 import javafx.geometry.*;
 import javafx.scene.control.*;
@@ -28,6 +30,7 @@ public class UMLDesigner extends Application
 		Stage stage = new Stage();
 		Scene scene = new Scene(pane);
 		List<Rectangle> selectedRectangles = new ArrayList<>();
+		List<Text> addedText = new ArrayList<>();
 		
 		Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
@@ -57,7 +60,7 @@ public class UMLDesigner extends Application
 			List<Rectangle> addedRectangles = new ArrayList<>();
 			Rectangle r1 = classDiagram.createClassDiagram(1);
 			addedRectangles.add(r1);
-			setRectangleEvents(selectedRectangles, addedRectangles, pane, editBar);
+			setRectangleEvents(selectedRectangles, addedRectangles, pane, editBar, addedText);
 			pane.getChildren().add(r1);
 		});
 		
@@ -69,7 +72,7 @@ public class UMLDesigner extends Application
 			pane.getChildren().add(r1);
 			Rectangle r2 = classDiagram.createClassDiagram(2);
 			addedRectangles.add(r2);
-			setRectangleEvents(selectedRectangles, addedRectangles, pane, editBar);
+			setRectangleEvents(selectedRectangles, addedRectangles, pane, editBar, addedText);
 			pane.getChildren().add(r2);
 		});
 		
@@ -84,7 +87,7 @@ public class UMLDesigner extends Application
 			pane.getChildren().add(r2);
 			Rectangle r3 = classDiagram.createClassDiagram(3);
 			addedRectangles.add(r3);
-			setRectangleEvents(selectedRectangles, addedRectangles, pane, editBar);
+			setRectangleEvents(selectedRectangles, addedRectangles, pane, editBar, addedText);
 			pane.getChildren().add(r3);
 		});
 		
@@ -102,7 +105,7 @@ public class UMLDesigner extends Application
 			pane.getChildren().add(r3);
 			Rectangle r4 = classDiagram.createClassDiagram(4);
 			addedRectangles.add(r4);
-			setRectangleEvents(selectedRectangles, addedRectangles, pane, editBar);
+			setRectangleEvents(selectedRectangles, addedRectangles, pane, editBar, addedText);
 			pane.getChildren().add(r4);
 		});
 		
@@ -120,6 +123,10 @@ public class UMLDesigner extends Application
 						pane.getChildren().remove(rectangle);
 						removed = true;
 					}
+			}
+			for(Text txt : addedText)
+			{
+				pane.getChildren().remove(txt);
 			}
 			if (removed)
 			{
@@ -179,7 +186,7 @@ public class UMLDesigner extends Application
 	public HBox createEditBar(Rectangle2D primaryScreenBounds)
 	{
 		HBox editBar = new HBox(8);
-		editBar.setPrefWidth(primaryScreenBounds.getWidth() / 2);
+		editBar.setPrefWidth(primaryScreenBounds.getWidth() * 0.8);
 		editBar.setPrefHeight(primaryScreenBounds.getHeight() / 20);
 		editBar.setLayoutX(175);
 		editBar.setLayoutY(0);
@@ -199,7 +206,7 @@ public class UMLDesigner extends Application
 	 * @param pane
 	 * @param editBar
 	 */
-	public void setRectangleEvents(List<Rectangle> selectedRectangles, List<Rectangle> addedRectangles, Pane pane, HBox editBar)
+	public void setRectangleEvents(List<Rectangle> selectedRectangles, List<Rectangle> addedRectangles, Pane pane, HBox editBar, List<Text> addedText)
 	{	
 		for(Rectangle rect : addedRectangles)
 		{
@@ -209,15 +216,25 @@ public class UMLDesigner extends Application
 					if(rect.getStroke() == Color.RED)
 					{
 						pane.getChildren().remove(editBar);
+						for(Rectangle selected : selectedRectangles)
+						{
+							selected.setStroke(Color.BLACK);
+							selected.setStrokeWidth(4);
+						}
+						selectedRectangles.clear();
 						for(Rectangle added : addedRectangles)
 						{
-								selectedRectangles.clear();
-								added.setStroke(Color.BLACK);
-								added.setStrokeWidth(4);
+							added.setStroke(Color.BLACK);
+							added.setStrokeWidth(4);
 						}
 					}
 					else
 					{
+						for(Rectangle selected : selectedRectangles)
+						{
+							selected.setStroke(Color.BLACK);
+							selected.setStrokeWidth(4);
+						}
 						for(Rectangle added : addedRectangles)
 						{
 							added.setStroke(Color.RED);
@@ -225,7 +242,8 @@ public class UMLDesigner extends Application
 							selectedRectangles.add(added);
 						}
 						pane.getChildren().add(editBar);
-						setupEditBar(editBar, selectedRectangles, pane, addedRectangles);
+						setupEditBar(editBar, selectedRectangles, pane, addedRectangles, addedText);
+						setupTextFields(editBar, selectedRectangles, pane, addedText);
 					}
 				});
 		}
@@ -241,7 +259,7 @@ public class UMLDesigner extends Application
 	 * @param pane
 	 * @param addedRectangles
 	 */
-	public void setupEditBar(HBox editBar, List<Rectangle> selectedRectangles, Pane pane, List<Rectangle> addedRectangles)
+	public void setupEditBar(HBox editBar, List<Rectangle> selectedRectangles, Pane pane, List<Rectangle> addedRectangles, List<Text> addedText)
 	{
 		if (editBar.getChildren().isEmpty())
 		{
@@ -259,6 +277,29 @@ public class UMLDesigner extends Application
 			remove.setOnAction((event) -> 
 			{
 				Rectangle last = selectedRectangles.get(selectedRectangles.size() - 1);
+				for(Text txt : addedText)
+				{
+					if(txt.xProperty().get() > last.xProperty().get() && txt.xProperty().get() < last.xProperty().get() + 200)
+					{
+						pane.getChildren().remove(txt);
+						addedText.remove(txt);
+						pane.getChildren().remove(last);
+						selectedRectangles.remove(last);
+						
+						if(selectedRectangles.size() == 0)
+						{
+							pane.getChildren().remove(editBar);
+						}
+						
+						if (selectedRectangles.size() < 4)
+						{
+							add.setDisable(false);
+						}
+						
+						setupTextFields(editBar, selectedRectangles, pane, addedText);
+						return;
+					}
+				}
 				pane.getChildren().remove(last);
 				selectedRectangles.remove(last);
 				if(selectedRectangles.size() == 0)
@@ -270,6 +311,8 @@ public class UMLDesigner extends Application
 				{
 					add.setDisable(false);
 				}
+				
+				setupTextFields(editBar, selectedRectangles, pane, addedText);
 			});
 		
 			add.setOnAction((event) -> 
@@ -280,10 +323,11 @@ public class UMLDesigner extends Application
 					Rectangle r2 = classDiagram.createClassDiagram(2);
 					addedRectangles.add(r2);
 					selectedRectangles.add(r2);
-					setRectangleEvents(selectedRectangles, addedRectangles, pane, editBar);
+					setRectangleEvents(selectedRectangles, addedRectangles, pane, editBar, addedText);
 					pane.getChildren().add(r2);
 					r2.setStroke(Color.RED);
 					r2.setStrokeWidth(4);
+					setupTextFields(editBar, selectedRectangles, pane, addedText);
 				}
 				
 				else if (selectedRectangles.size() == 2)
@@ -292,10 +336,11 @@ public class UMLDesigner extends Application
 					Rectangle r3 = classDiagram.createClassDiagram(3);
 					addedRectangles.add(r3);
 					selectedRectangles.add(r3);
-					setRectangleEvents(selectedRectangles, addedRectangles, pane, editBar);
+					setRectangleEvents(selectedRectangles, addedRectangles, pane, editBar, addedText);
 					pane.getChildren().add(r3);
 					r3.setStroke(Color.RED);
 					r3.setStrokeWidth(4);
+					setupTextFields(editBar, selectedRectangles, pane, addedText);
 				}
 				
 				else if (selectedRectangles.size() == 3)
@@ -304,19 +349,110 @@ public class UMLDesigner extends Application
 					Rectangle r4 = classDiagram.createClassDiagram(4);
 					addedRectangles.add(r4);
 					selectedRectangles.add(r4);
-					setRectangleEvents(selectedRectangles, addedRectangles, pane, editBar);
+					setRectangleEvents(selectedRectangles, addedRectangles, pane, editBar, addedText);
 					pane.getChildren().add(r4);
 					r4.setStroke(Color.RED);
 					r4.setStrokeWidth(4);
+					setupTextFields(editBar, selectedRectangles, pane, addedText);
 				}
 				
 				if (selectedRectangles.size() > 3)
 				{
 					add.setDisable(true);
+					setupTextFields(editBar, selectedRectangles, pane, addedText);
 				}
 				
 			});
 		}
+	}
+	
+	public void setupTextFields(HBox editBar, List<Rectangle> selectedRectangles, Pane pane, List<Text> addedText)
+	{	
+		editBar.getChildren().remove(2, editBar.getChildren().size());
 		
+		if (selectedRectangles.size() == 1)
+		{	
+			TextField tf1 = new TextField("Field 1");
+			Button save1 = new Button("Add");
+			setupTextSaveEvents(save1, selectedRectangles.get(0), tf1, pane, addedText);
+			Label instr = new Label("Use a comma to add a new line.");
+			editBar.getChildren().add(instr);
+			editBar.getChildren().add(tf1);
+			editBar.getChildren().add(save1);
+		}
+		if (selectedRectangles.size() == 2)
+		{
+			TextField tf1 = new TextField("Field 1");
+			TextField tf2 = new TextField("Field 2");
+			Button save1  = new Button("Add");
+			setupTextSaveEvents(save1, selectedRectangles.get(0), tf1, pane, addedText);
+			Button save2  = new Button("Add");
+			setupTextSaveEvents(save2, selectedRectangles.get(1), tf2, pane, addedText);
+			Label instr = new Label("Use a comma to add a new line.");
+			editBar.getChildren().add(instr);
+			editBar.getChildren().add(tf1);
+			editBar.getChildren().add(save1);
+			editBar.getChildren().add(tf2);
+			editBar.getChildren().add(save2);
+		}
+		if (selectedRectangles.size() == 3)
+		{
+			TextField tf1 = new TextField("Field 1");
+			TextField tf2 = new TextField("Field 2");
+			TextField tf3 = new TextField("Field 3");
+			Button save1  = new Button("Add");
+			setupTextSaveEvents(save1, selectedRectangles.get(0), tf1, pane, addedText);
+			Button save2  = new Button("Add");
+			setupTextSaveEvents(save2, selectedRectangles.get(1), tf2, pane, addedText);
+			Button save3  = new Button("Add");
+			setupTextSaveEvents(save3, selectedRectangles.get(2), tf3, pane, addedText);
+			Label instr = new Label("Use a comma to add a new line.");
+			editBar.getChildren().add(instr);
+			editBar.getChildren().add(tf1);
+			editBar.getChildren().add(save1);
+			editBar.getChildren().add(tf2);
+			editBar.getChildren().add(save2);
+			editBar.getChildren().add(tf3);
+			editBar.getChildren().add(save3);
+		}
+		if (selectedRectangles.size() == 4)
+		{
+			TextField tf1 = new TextField("Field 1");
+			TextField tf2 = new TextField("Field 2");
+			TextField tf3 = new TextField("Field 3");
+			TextField tf4 = new TextField("Field 4");
+			Button save1  = new Button("Add");
+			setupTextSaveEvents(save1, selectedRectangles.get(0), tf1, pane, addedText);
+			Button save2  = new Button("Add");
+			setupTextSaveEvents(save2, selectedRectangles.get(1), tf2, pane, addedText);
+			Button save3  = new Button("Add");
+			setupTextSaveEvents(save3, selectedRectangles.get(2), tf3, pane, addedText);
+			Button save4  = new Button("Add");
+			setupTextSaveEvents(save4, selectedRectangles.get(3), tf4, pane, addedText);
+			Label instr = new Label("Use a comma to add a new line.");
+			editBar.getChildren().add(instr);
+			editBar.getChildren().add(tf1);
+			editBar.getChildren().add(save1);
+			editBar.getChildren().add(tf2);
+			editBar.getChildren().add(save2);
+			editBar.getChildren().add(tf3);
+			editBar.getChildren().add(save3);
+			editBar.getChildren().add(tf4);
+			editBar.getChildren().add(save4);
+		}
+	}
+	
+	public void setupTextSaveEvents(Button b, Rectangle selectedRectangle, TextField tf, Pane pane, List<Text> addedText)
+	{
+		b.setOnAction((event) -> 
+		{
+			String text = tf.getText();
+			text = text.replace(",", "\n");
+			Text setText = new Text(text);
+			addedText.add(setText);
+			setText.setX(selectedRectangle.getX() + 5);
+			setText.setY(selectedRectangle.getY() + 15);
+			pane.getChildren().add(setText);
+		});
 	}
 }
