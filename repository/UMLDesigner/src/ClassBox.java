@@ -35,6 +35,7 @@ public class ClassBox{
 	private static double DEFAULT_STROKE_WIDTH = 2;
 	private static Color FILL_COLOR = Color.TRANSPARENT;
 	private static Color STROKE_COLOR = Color.BLACK;
+	private int size = 1;
 	
 	private boolean isSelected = false;
 	
@@ -43,9 +44,17 @@ public class ClassBox{
 	 * @param size, pane
 	 */
 	public ClassBox(int size, Pane pane) {
+		this.size = size;
 		initRects(size, pane);
 	}
 	
+	/***
+	 * Constructor for tests
+	 * @param size, pane
+	 */
+	public ClassBox(int size) {
+		this.size = size;
+	}
 	/***
 	 * This creates a rectangle at the specified location
 	 * @param posX, posY, width, height, arc dimension, fill color, stroke color, stroke width
@@ -311,5 +320,14 @@ public class ClassBox{
 		}
 		rects.clear();
 		textAreas.clear();
+	}
+	
+	/***
+	 * returns the size
+	 * This needs to be called before deleting a ClassBox
+	 * @param pane
+	 */
+	public int size () {
+		return size;
 	}
 }
