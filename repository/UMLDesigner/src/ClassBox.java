@@ -21,6 +21,7 @@ public class ClassBox{
 	//Initalize lists
 	private ArrayList<Rectangle> rects = new ArrayList<>();
 	private ArrayList<TextArea> textAreas = new ArrayList<>();
+	private ArrayList<Anchor> anchors = new ArrayList<>();
 	
 	//Defaults for rectangles sizes
 	
@@ -163,6 +164,7 @@ public class ClassBox{
 				break;
 			}	
 		}
+		anchorUpdate(pane, false, false, false);
 	}
 	
 	/***
@@ -329,5 +331,161 @@ public class ClassBox{
 	 */
 	public int size () {
 		return size;
+	}
+	
+	public void anchorUpdate (Pane pane, boolean updateAnchors, boolean remove, boolean removeAll)
+	{	
+		
+		if (removeAll)
+		{
+			pane.getChildren().removeAll(anchors);
+			anchors.clear();
+			
+			return;
+		}
+		
+		int size = 0;
+		
+		if (rects.size() > 0)
+		{
+			size = rects.size();
+		}
+		
+		if (updateAnchors)
+		{
+			pane.getChildren().removeAll(anchors);
+			anchors.clear();
+			if(remove)
+			{
+				size = size + 1;
+				if (size == 1)
+				{
+					pane.getChildren().removeAll(anchors);
+					anchors.clear();
+					
+					return;
+				}
+			}
+			else
+			{
+				size = size - 1;
+			}
+		}
+		
+		Anchor anch1 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(0));
+		Anchor anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H / 2));
+		Anchor anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H / 2));
+		Anchor anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H));
+		
+		switch (size) {
+		
+		case 1:
+		{	
+			if (updateAnchors)
+			{
+				if(remove && !removeAll)
+				{
+					// Do Nothing - removes anchors in above code
+				}
+				else if (!remove && !removeAll)
+				{
+					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2));
+					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2));
+					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H));
+				}
+			}
+			break;
+		}	
+		case 2:
+		{
+			if (updateAnchors)
+			{
+				if(remove && !removeAll)
+				{
+					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H / 2));
+					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H / 2));
+					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H));
+				}
+				else if (!remove && !removeAll)
+				{
+					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2));
+					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2));
+					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H));
+				}
+			}
+			else
+			{
+				anch1 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(0));
+				anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2));
+				anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2));
+				anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H));
+			}
+			
+			break;
+		}	
+		case 3:
+		{	
+			if (updateAnchors)
+			{
+				if(remove && !removeAll)
+				{
+					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2));
+					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2));
+					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H));
+				}
+				else if (!remove && !removeAll)
+				{
+					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H) / 2));
+					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H) / 2));
+					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H));
+				}
+			}
+			else
+			{
+				anch1 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(0));
+				anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2));
+				anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2));
+				anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H));
+			}
+				
+			break;
+		}	
+		default:
+		{	
+			if (updateAnchors)
+			{
+				if(remove && !removeAll)
+				{
+					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2));
+					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2));
+					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H));
+				}
+				else if (!remove && !removeAll)
+				{
+					// Can't add to a ClassBox with 4 fields - Do Nothing
+				}
+			}
+			else
+			{
+				anch1 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(0));
+				anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H) / 2));
+				anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H) / 2));
+				anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H));
+			}
+			
+			break;
+		}
+		
+		}
+		
+		if (!removeAll)
+		{
+			anchors.add (anch1);
+			anchors.add (anch2);
+			anchors.add (anch4);
+			anchors.add (anch3);
+		
+			pane.getChildren().addAll (anch1, anch2, anch3, anch4);
+		}
 	}
 }

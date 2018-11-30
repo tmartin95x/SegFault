@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javafx.application.*;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.*;
 import javafx.scene.shape.Rectangle;
@@ -10,6 +11,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.*;
 import javafx.geometry.*;
+import javafx.print.PrinterJob;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
@@ -20,8 +22,8 @@ import javafx.scene.paint.Color;
  * and editing the different class diagrams that were created.
  * 
  * @author Tyler Martin, Zack Mixa, Eric Frey, Patrick Hack, Bill Shannon
- * @Version: Iteration 1
- * @Due: 10/4/2018
+ * @Version: Iteration 3
+ * @Due: 12/4/2018
  * 
  */
 public class UMLDesigner extends Application
@@ -54,6 +56,7 @@ public class UMLDesigner extends Application
 		Button create3 = new Button("Create Class Diagram(3)");
 		Button create4 = new Button("Create Class Diagram(4)");
 		Button remove = new Button("Remove Class Diagram");
+		Button print = new Button("Print UML Diagram");
 		
 		// Button event handling
 		create1.setOnAction((event) ->
@@ -109,12 +112,24 @@ public class UMLDesigner extends Application
 			//deletes a ClassBox and all it's rectangles and textAreas
 			for (int i = 0; i < addedClassBoxes.size(); i++) {
 				if (addedClassBoxes.get(i).isSelected()) {
+					addedClassBoxes.get(i).anchorUpdate(pane, true, true, true);
 					addedClassBoxes.get(i).empty(pane);
 					addedClassBoxes.remove(addedClassBoxes.get(i));
 					pane.getChildren().remove(editBar);
 					break;
 				}
 			}
+		});
+		
+		print.setOnAction((event) -> 
+		{	
+			PrinterJob job = PrinterJob.createPrinterJob();
+			if (job != null)	{
+				job.showPrintDialog(stage);
+				job.printPage(pane);
+				job.endJob();
+			}
+			
 		});
 		
 		
@@ -124,6 +139,7 @@ public class UMLDesigner extends Application
 		toolBar.getChildren().add(create3);
 		toolBar.getChildren().add(create4);
 		toolBar.getChildren().add(remove);
+		toolBar.getChildren().add(print);
 		
 		scene.getStylesheets().add("transparent-text-area.css");
 
@@ -265,6 +281,7 @@ public class UMLDesigner extends Application
 			//Set button clicked event for remove button
 			remove.setOnAction((event) -> 
 			{
+				boolean updated = false;
 				//remove field from ClassBox
 				for (ClassBox boxes : addedClassBoxes) {
 					if (boxes.isSelected()) {
@@ -276,13 +293,21 @@ public class UMLDesigner extends Application
 						}
 						//Enable button
 						add.setDisable(false);
+						
+						if (!updated)
+						{
+							boxes.anchorUpdate(pane, true, true, false);
+							updated = true;
+						}
 					}
 				}
+				updated = false;
 			});
 		
 			//Set button clicked event for add button
 			add.setOnAction((event) -> 
 			{	
+				boolean updated = false;
 				//add field to ClassBox if there is room
 				for (ClassBox boxes : addedClassBoxes) {
 					if (boxes.isSelected()) {
@@ -296,8 +321,14 @@ public class UMLDesigner extends Application
 						if (boxSize == 4) {
 							add.setDisable(true);
 						}
+						if (!updated)
+						{
+							boxes.anchorUpdate(pane, true, false, false);
+							updated = true;
+						}
 					}
 				}
+				updated = false;
 			});		
 		}
 	}
