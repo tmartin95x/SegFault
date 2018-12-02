@@ -2,15 +2,23 @@ import java.awt.MouseInfo;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.platform.commons.util.StringUtils;
+
 import javafx.application.*;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.*;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.transform.Scale;
 import javafx.stage.*;
 import javafx.geometry.*;
+import javafx.print.PageLayout;
+import javafx.print.PageOrientation;
+import javafx.print.Paper;
+import javafx.print.Printer;
 import javafx.print.PrinterJob;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
@@ -29,7 +37,9 @@ import javafx.scene.paint.Color;
 public class UMLDesigner extends Application
 {
 	private List<ClassBox> addedClassBoxes = new ArrayList<>();
+	public List<ClassBoxConnector> addedConnectors = new ArrayList();
 	
+	private HBox editBar;
 	@Override
 	public void start(Stage arg) throws Exception
 	{
@@ -37,6 +47,8 @@ public class UMLDesigner extends Application
 		Stage stage = new Stage();
 		Scene scene = new Scene(pane);
 
+		setPaneMouseEvent(pane);
+		
 		Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
 		// Set Stage boundaries to visible bounds of the main screen
@@ -50,7 +62,9 @@ public class UMLDesigner extends Application
 		// Create the vbox to hold all of the buttons
 		VBox toolBar = createToolbar(primaryScreenBounds);
 		HBox editBar = createEditBar(primaryScreenBounds);
+		this.editBar = editBar;
 		
+		TextField numBoxes = new TextField("Add Multuple: ");
 		Button create1 = new Button("Create Class Diagram(1)");
 		Button create2 = new Button("Create Class Diagram(2)");
 		Button create3 = new Button("Create Class Diagram(3)");
@@ -61,62 +75,130 @@ public class UMLDesigner extends Application
 		// Button event handling
 		create1.setOnAction((event) ->
 		{
-			ClassBox box = new ClassBox(1, pane);
-			
-			addedClassBoxes.add(box);
-			
-			//Set Mouse events for added rectangles
-			for (Rectangle rect : box.getRects()) {
-								
-				setRectMouseEvent(rect, box, pane, editBar);
+			int num;
+			try {
+				num = Integer.parseInt(numBoxes.getText());
+			}catch(NumberFormatException e) {
+				num = 1;
 			}
+						
+			for (int i = 0; i < num; i++) {
+				ClassBox box = new ClassBox(1, pane, i);
+				
+				addedClassBoxes.add(box);
+				
+				//Set Mouse events for added rectangles
+				for (Rectangle rect : box.getRects()) {
+									
+					setRectMouseEvent(rect, box, pane);
+				}
+			}
+			
+			numBoxes.setText("Add Multiple:");
 		});
 		
 		create2.setOnAction((event) -> 
 		{
-			ClassBox box = new ClassBox(2, pane);
-			addedClassBoxes.add(box);
-			
-			//Set Mouse events for added rectangles
-			for (Rectangle rect : box.getRects()) {
-				
-				setRectMouseEvent(rect, box, pane, editBar);
+			int num;
+			try {
+				num = Integer.parseInt(numBoxes.getText());
+			}catch(NumberFormatException e) {
+				num = 1;
 			}
+			
+			for (int i = 0; i < num; i++) {
+				ClassBox box = new ClassBox(2, pane, i);
+				addedClassBoxes.add(box);
+				
+				//Set Mouse events for added rectangles
+				for (Rectangle rect : box.getRects()) {
+					
+					setRectMouseEvent(rect, box, pane);
+				}
+			}
+			numBoxes.setText("Add Multiple:");
 		});
 		
 		create3.setOnAction((event) -> 
 		{
-			ClassBox box = new ClassBox(3, pane);
-			addedClassBoxes.add(box);
-			
-			//Set Mouse events for added rectangles
-			for (Rectangle rect : box.getRects()) {
-				
-				setRectMouseEvent(rect, box, pane, editBar);
+			int num;
+			try {
+				num = Integer.parseInt(numBoxes.getText());
+			}catch(NumberFormatException e) {
+				num = 1;
 			}
+			
+			for (int i = 0; i < num; i++) {
+					ClassBox box = new ClassBox(3, pane, i);
+				addedClassBoxes.add(box);
+				
+				//Set Mouse events for added rectangles
+				for (Rectangle rect : box.getRects()) {
+					
+					setRectMouseEvent(rect, box, pane);
+				}
+			}
+			numBoxes.setText("Add Multiple:");
 		});
 		
 		create4.setOnAction((event) -> 
 		{
-			ClassBox box = new ClassBox(4, pane);
-			addedClassBoxes.add(box);
-			
-			//Set Mouse events for added rectangles
-			for (Rectangle rect : box.getRects()) {
-				
-				setRectMouseEvent(rect, box, pane, editBar);
+			int num;
+			try {
+				num = Integer.parseInt(numBoxes.getText());
+			}catch(NumberFormatException e) {
+				num = 1;
 			}
+			
+			for (int i = 0; i < num; i++) {
+				ClassBox box = new ClassBox(4, pane, i);
+				addedClassBoxes.add(box);
+			
+				//Set Mouse events for added rectangles
+				for (Rectangle rect : box.getRects()) {
+				
+					setRectMouseEvent(rect, box, pane);
+				}
+			}
+			numBoxes.setText("Add Multiple:");
 		});
 		remove.setOnAction((event) -> 
 		{
+		
 			//deletes a ClassBox and all it's rectangles and textAreas
 			for (int i = 0; i < addedClassBoxes.size(); i++) {
+				
+				ArrayList<ClassBoxConnector> removes = new ArrayList();
+				
 				if (addedClassBoxes.get(i).isSelected()) {
-					addedClassBoxes.get(i).anchorUpdate(pane, true, true, true);
+	
+					for (Anchor anchor : addedClassBoxes.get(i).getAnchors()) {
+						for (ClassBoxConnector connector : addedConnectors) {
+							if ((connector.getStartAnchor().equals(anchor)) | (connector.getEndAnchor().equals(anchor))) {
+
+								removes.add(connector);
+							}
+						}
+					}
+					for (ClassBoxConnector connectors : removes) {
+						pane.getChildren().remove(connectors.getSelectorLine());
+						pane.getChildren().remove(connectors.getLine());
+					}
+		
+					addedConnectors.removeAll(removes);
+					
+					addedClassBoxes.get(i).anchorUpdate(pane, true, true, true, addedConnectors);
 					addedClassBoxes.get(i).empty(pane);
+					
 					addedClassBoxes.remove(addedClassBoxes.get(i));
+
 					pane.getChildren().remove(editBar);
 					break;
+				}
+			}
+			for (ClassBox box : addedClassBoxes) {
+				for (Anchor anchor : box.getAnchors()) {
+					anchor.hideAnchor();
 				}
 			}
 		});
@@ -124,16 +206,43 @@ public class UMLDesigner extends Application
 		print.setOnAction((event) -> 
 		{	
 			PrinterJob job = PrinterJob.createPrinterJob();
+			job.showPrintDialog(stage);
+
+			Printer printer = job.getPrinter();
+			
+			PageLayout pageLayout = printer.createPageLayout(Paper.A4, PageOrientation.LANDSCAPE, Printer.MarginType.HARDWARE_MINIMUM);
+						
+		    double scaleX = pageLayout.getPrintableWidth() / (primaryScreenBounds.getWidth()*2);
+		    double scaleY = pageLayout.getPrintableHeight() / (primaryScreenBounds.getHeight()*2);
+
+			Scale scale = new Scale(scaleX, scaleY);
+			pane.getTransforms().add(scale);
+			
+			pane.getChildren().remove(this.editBar);
+			
+			pane.getChildren().remove(toolBar);
+			
+			for (ClassBox boxes : addedClassBoxes) {
+				boxes.selectOff();
+				for (Anchor anchor : boxes.getAnchors()) {
+					anchor.hideAnchor();
+				}
+			}
+			for (ClassBoxConnector connectors : addedConnectors) {
+				connectors.selectOff();
+			}
+			
 			if (job != null)	{
-				job.showPrintDialog(stage);
 				job.printPage(pane);
 				job.endJob();
 			}
-			
+			pane.getTransforms().remove(scale);
+			pane.getChildren().add(toolBar);
 		});
 		
 		
 		// Add the buttons to the toolbar
+		toolBar.getChildren().add(numBoxes);
 		toolBar.getChildren().add(create1);
 		toolBar.getChildren().add(create2);
 		toolBar.getChildren().add(create3);
@@ -165,7 +274,62 @@ public class UMLDesigner extends Application
 	 * 
 	 * @param Rectangle, ClassBox, Pane, HBox
 	 */
-	public void setRectMouseEvent(Rectangle rect, ClassBox box, Pane pane, HBox editBar) {
+	public void setPaneMouseEvent(Pane pane) {
+		pane.setOnMouseDragged((event) -> {
+			boolean dragging = false;
+			for (ClassBox boxes : addedClassBoxes) {
+				for (Anchor anchors : boxes.getAnchors()) {
+					if (anchors.hasConnector()) {
+						anchors.getConnector().setEndX(MouseInfo.getPointerInfo().getLocation().x-10);
+						anchors.getConnector().setEndY(MouseInfo.getPointerInfo().getLocation().y-40);
+						anchors.setEntered(false);
+						dragging = true;
+					}
+				}
+			}
+		});
+		pane.setOnMouseReleased((event) -> {
+			Anchor first = new Anchor();
+			boolean isConnecting = false;
+			for (ClassBox boxes : addedClassBoxes) {
+				for (Anchor anchors : boxes.getAnchors()) {
+					if (anchors.hasConnector()) {
+						first = anchors;
+						isConnecting = true;
+						anchors.setHasConnector(false);
+					}
+				}
+			}
+			if (isConnecting) {
+				for (ClassBox boxes : addedClassBoxes) {
+					for (Anchor anchors : boxes.getAnchors()) {
+						
+						double mouseX = MouseInfo.getPointerInfo().getLocation().x-10;
+						double mouseY = MouseInfo.getPointerInfo().getLocation().y-40;
+						
+						if ((anchors.getDoubleX() > mouseX - 20) && (anchors.getDoubleX() < mouseX + 20)) {
+							if ((anchors.getDoubleY() > mouseY - 20) && (anchors.getDoubleY() < mouseY + 20)) {
+								ClassBoxConnector con = new ClassBoxConnector(first, anchors, pane, "solid");
+								setConnectorMouseEvent(con.getSelectorLine(),con, pane);
+								addedConnectors.add(con);
+								anchors.toFront();
+							}
+						}
+					}
+				}
+				
+				pane.getChildren().remove(first.getConnector().getLine());
+				pane.getChildren().remove(first.getConnector().getSelectorLine());
+			}
+			for (ClassBox boxes : addedClassBoxes) {
+				for (Anchor anchors : boxes.getAnchors()) {
+					anchors.toFront();
+				}
+					
+			}
+		});
+	}
+	public void setRectMouseEvent(Rectangle rect, ClassBox box, Pane pane) {
 		rect.setOnMouseClicked((event) -> {
 			
 			int clicks = event.getClickCount();
@@ -183,7 +347,9 @@ public class UMLDesigner extends Application
 						boxes.selectOff();
 					}
 				}
-				
+				for (ClassBoxConnector connectors : addedConnectors) {
+					connectors.selectOff();
+				}
 				//select or unselect the box
 				box.toggleSelect();
 				
@@ -194,7 +360,13 @@ public class UMLDesigner extends Application
 					//Create toolbox
 					pane.getChildren().remove(editBar);
 					
-					setupEditBar(editBar, box, pane);
+					for (ClassBox boxes : addedClassBoxes) {
+					
+						for (Anchor anchor : boxes.getAnchors()) {
+							anchor.showAnchor();
+						}
+					}
+					setupEditBar(box, pane);
 					
 					//Disables and Enables the add button on the editBar based on the size of the ClassBox selected
 					Node node = editBar.getChildren().get(1);
@@ -209,9 +381,65 @@ public class UMLDesigner extends Application
 					
 					
 				}else {
+					for (ClassBox boxes : addedClassBoxes) {
+						for (Anchor anchor : boxes.getAnchors()) {
+							anchor.hideAnchor();
+						}
+					}
 					pane.getChildren().remove(editBar);
 				}
 			}
+		});
+	}
+	
+	public void setConnectorMouseEvent(Line line,ClassBoxConnector connector, Pane pane) {
+		line.setOnMouseClicked((event) -> {
+			
+						
+			//If a rectangle is double clicked, edit its TextArea
+		
+			//Handles the selecting of ClassBoxes
+		
+				//First deselect all ClassBoxes
+				for (ClassBoxConnector connectors : addedConnectors) {
+					if(connectors.equals(connector)) {
+					}else {
+						connectors.selectOff();
+					}
+				}
+				for (ClassBox boxes : addedClassBoxes) {
+					boxes.selectOff();
+				}
+				//select or unselect the box
+				connector.toggleSelect();
+				
+				//take focus away from any TextAreas currently being edited
+				pane.requestFocus();
+				
+				if (connector.isSelected()) { 
+					//Create toolbox
+					pane.getChildren().remove(editBar);
+					
+					setupConnectorEditBar(connector, pane);
+					
+					pane.getChildren().add(editBar);
+					
+					for (ClassBox boxes : addedClassBoxes) {
+						for (Anchor anchors : boxes.getAnchors()) {
+							anchors.showAnchor();
+						}
+					}
+					
+				}else {
+					pane.getChildren().remove(editBar);
+					
+					for (ClassBox boxes : addedClassBoxes) {
+						for (Anchor anchors : boxes.getAnchors()) {
+							anchors.hideAnchor();
+						}
+					}
+				}
+			
 		});
 	}
 	
@@ -266,17 +494,20 @@ public class UMLDesigner extends Application
 	 * @param pane
 	 * @param addedRectangles
 	 */
-	public void setupEditBar(HBox editBar, ClassBox box, Pane pane)
+	public void setupEditBar(ClassBox box, Pane pane)
 	{
+		Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
+		HBox myEdit = createEditBar(primaryScreenBounds);
 		
-		if (editBar.getChildren().isEmpty())
+		if (myEdit.getChildren().isEmpty())
 		{
 		
 			Button remove = new Button("Remove Field");
 			Button add = new Button("Add Field");
-
-			editBar.getChildren().add(remove);
-			editBar.getChildren().add(add);
+			
+			boolean removedAll = false;
+			myEdit.getChildren().add(remove);
+			myEdit.getChildren().add(add);
 		
 			//Set button clicked event for remove button
 			remove.setOnAction((event) -> 
@@ -289,15 +520,34 @@ public class UMLDesigner extends Application
 						
 						int boxSize = boxes.getRects().size();
 						if(boxSize == 0) {
-							pane.getChildren().remove(editBar);
+							pane.getChildren().remove(myEdit);
+							
+							ArrayList<ClassBoxConnector> removes = new ArrayList();
+							
+							if (boxes.isSelected()) {
+				
+								for (Anchor anchor : boxes.getAnchors()) {
+									for (ClassBoxConnector connector : addedConnectors) {
+										if ((connector.getStartAnchor().equals(anchor)) | (connector.getEndAnchor().equals(anchor))) {
+											removes.add(connector);
+										}
+									}
+								}
+								for (ClassBoxConnector connectors : removes) {
+									pane.getChildren().remove(connectors.getSelectorLine());
+									pane.getChildren().remove(connectors.getLine());
+								}
+								addedConnectors.removeAll(removes);
+							}
 						}
 						//Enable button
 						add.setDisable(false);
 						
 						if (!updated)
 						{
-							boxes.anchorUpdate(pane, true, true, false);
+							boxes.anchorUpdate(pane, true, true, false, addedConnectors);
 							updated = true;
+							
 						}
 					}
 				}
@@ -315,7 +565,7 @@ public class UMLDesigner extends Application
 												
 						int boxSize = boxes.getRects().size();
 						
-						setRectMouseEvent(boxes.getRects().get(boxSize-1), box, pane, editBar);
+						setRectMouseEvent(boxes.getRects().get(boxSize-1), box, pane);
 						
 						//disable button if there are now 4 fields
 						if (boxSize == 4) {
@@ -323,13 +573,53 @@ public class UMLDesigner extends Application
 						}
 						if (!updated)
 						{
-							boxes.anchorUpdate(pane, true, false, false);
+							boxes.anchorUpdate(pane, true, false, false, addedConnectors);
 							updated = true;
 						}
 					}
 				}
 				updated = false;
 			});		
+			editBar = myEdit;
+		}
+	}
+	public void setupConnectorEditBar(ClassBoxConnector connector, Pane pane)
+	{
+		Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
+		HBox myEdit = createEditBar(primaryScreenBounds);
+		
+		if (myEdit.getChildren().isEmpty())
+		{
+		
+			Button remove = new Button("Remove Line");
+			Button changeType = new Button("Make Dotted");
+
+			if (connector.getType() == "dotted") {
+				changeType.setText("Make Solid");
+			}
+			
+			myEdit.getChildren().add(remove);
+			myEdit.getChildren().add(changeType);
+			//Set button clicked event for remove button
+			remove.setOnAction((event) -> 
+			{
+				addedConnectors.remove(connector);
+				pane.getChildren().remove(connector.getLine());
+				pane.getChildren().remove(connector.getSelectorLine());
+				pane.getChildren().remove(editBar);
+			});
+			changeType.setOnAction((event) -> 
+			{
+				System.out.print(connector.getType());
+				if (connector.getType() == "solid") {
+					connector.setType("dotted");
+					changeType.setText("Make Solid");
+				}else {
+					connector.setType("solid");
+					changeType.setText("Make Dotted");
+				}
+			});		
+			editBar = myEdit;
 		}
 	}
 }

@@ -57,4 +57,6 @@ class UML_Test {
 		box.selectOff();
 		assertEquals(box.isSelected(), false);
 	}
+	
+	
 }

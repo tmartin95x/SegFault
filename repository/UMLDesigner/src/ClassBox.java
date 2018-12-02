@@ -3,11 +3,14 @@ import java.awt.MouseInfo;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.scene.paint.Color;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Screen;
+import javafx.stage.Stage;
 
 /***
  * ClassBox class
@@ -48,7 +51,17 @@ public class ClassBox{
 		this.size = size;
 		initRects(size, pane);
 	}
-	
+	public ClassBox(int size, Pane pane, int offset) {
+		this.size = size;
+		initRects(size, pane);
+		
+		for (Rectangle rect : rects) {
+			rect.setX(DEFAULT_RECT_X + (offset * DEFAULT_RECT_WIDTH)+(offset*20));
+		}
+		for (TextArea tas: textAreas) {
+			tas.setLayoutX(DEFAULT_RECT_X + (offset * DEFAULT_RECT_WIDTH)+(offset*20));
+		}
+	}
 	/***
 	 * Constructor for tests
 	 * @param size, pane
@@ -61,16 +74,17 @@ public class ClassBox{
 	 * @param posX, posY, width, height, arc dimension, fill color, stroke color, stroke width
 	 * @return the rectangle
 	 */
-	private Rectangle createRect(double posX, double posY, double width, double height, double arcDim, Color fill, Color stroke, double strokeWidth) {
+	private Rectangle createRect(double posX, double posY, double width, double height, double arcDim, Color fill, Color stroke, double strokeWidth, Pane pane) {
 		Rectangle r = new Rectangle(posX,posY,width,height);
 		r.setArcHeight(arcDim);
 		r.setArcWidth(arcDim);
 		r.setFill(fill);
 		r.setStroke(stroke);
 		r.setStrokeWidth(strokeWidth);
+//		r.setFill(Color.WHITE);
 		
 		r.setOnMouseDragged(event -> {
-			drag();
+			drag(pane);
 		});
 		return r;
 	}
@@ -87,6 +101,7 @@ public class ClassBox{
 		ta.setPrefWidth(width);
 		ta.setPrefHeight(height);
 		ta.setWrapText(true);
+//		ta.setStyle("transparent-text-area.css");
 		
 		return ta;
 	}
@@ -105,7 +120,7 @@ public class ClassBox{
 			
 			case 0: //Create the first rectangle
 
-				Rectangle rect1 = createRect(currX, currY, DEFAULT_RECT_WIDTH, DEFAULT_RECT_ONE_H, DEFAULT_ARC_DIM, FILL_COLOR, STROKE_COLOR, DEFAULT_STROKE_WIDTH);
+				Rectangle rect1 = createRect(currX, currY, DEFAULT_RECT_WIDTH, DEFAULT_RECT_ONE_H, DEFAULT_ARC_DIM, FILL_COLOR, STROKE_COLOR, DEFAULT_STROKE_WIDTH, pane);
 				
 				TextArea ta = createText(currX, currY, DEFAULT_RECT_WIDTH, DEFAULT_RECT_ONE_H-20);
 				
@@ -120,7 +135,7 @@ public class ClassBox{
 				
 				currY = currY + DEFAULT_RECT_ONE_H;
 
-				Rectangle rect2 = createRect(currX, currY, DEFAULT_RECT_WIDTH, DEFAULT_RECT_TWO_H, DEFAULT_ARC_DIM, FILL_COLOR, STROKE_COLOR, DEFAULT_STROKE_WIDTH);
+				Rectangle rect2 = createRect(currX, currY, DEFAULT_RECT_WIDTH, DEFAULT_RECT_TWO_H, DEFAULT_ARC_DIM, FILL_COLOR, STROKE_COLOR, DEFAULT_STROKE_WIDTH,pane);
 				
 				TextArea ta1 = createText(currX, currY, DEFAULT_RECT_WIDTH, DEFAULT_RECT_TWO_H-20);
 				
@@ -135,7 +150,7 @@ public class ClassBox{
 				
 				currY = currY + DEFAULT_RECT_TWO_H;
 
-				Rectangle rect3 = createRect(currX, currY, DEFAULT_RECT_WIDTH, DEFAULT_RECT_THREE_H, DEFAULT_ARC_DIM, FILL_COLOR, STROKE_COLOR, DEFAULT_STROKE_WIDTH);
+				Rectangle rect3 = createRect(currX, currY, DEFAULT_RECT_WIDTH, DEFAULT_RECT_THREE_H, DEFAULT_ARC_DIM, FILL_COLOR, STROKE_COLOR, DEFAULT_STROKE_WIDTH, pane);
 				
 				TextArea ta2 = createText(currX, currY, DEFAULT_RECT_WIDTH, DEFAULT_RECT_THREE_H-20);
 				
@@ -151,7 +166,7 @@ public class ClassBox{
 				
 				currY = currY + DEFAULT_RECT_THREE_H;
 
-				Rectangle rect4 = createRect(currX, currY, DEFAULT_RECT_WIDTH, DEFAULT_RECT_FOUR_H, DEFAULT_ARC_DIM, FILL_COLOR, STROKE_COLOR, DEFAULT_STROKE_WIDTH);
+				Rectangle rect4 = createRect(currX, currY, DEFAULT_RECT_WIDTH, DEFAULT_RECT_FOUR_H, DEFAULT_ARC_DIM, FILL_COLOR, STROKE_COLOR, DEFAULT_STROKE_WIDTH, pane);
 				
 				TextArea ta3 = createText(currX, currY, DEFAULT_RECT_WIDTH-6, DEFAULT_RECT_FOUR_H-20);
 				
@@ -164,7 +179,15 @@ public class ClassBox{
 				break;
 			}	
 		}
-		anchorUpdate(pane, false, false, false);
+		
+//		for (TextArea ta : textAreas) {
+//			ta.toFront();
+//		}
+//		for (Rectangle rect : rects) {
+//			rect.toBack();
+//		}
+		
+		anchorUpdate(pane, false, false, false, new ArrayList<ClassBoxConnector>());
 	}
 	
 	/***
@@ -196,6 +219,9 @@ public class ClassBox{
 		return textAreas;
 	}
 	
+	public ArrayList<Anchor> getAnchors(){
+		return anchors;
+	}
 	/***
 	 * returns whether or not the ClassBox is currently selected
 	 * @return isSelected
@@ -216,22 +242,52 @@ public class ClassBox{
 	 * called in the on mouse dragged event of a rectangle.
 	 * It moves all rectangles and textAreas with the mouse position.
 	 */
-	private void drag() {
+	private void drag(Pane pane) {
 		double prevHeight = 0;
-		
-		//Loop through rectangles and textAreas and set position of each
-		for(int i = 0; i < rects.size(); i++)
-		{
-			int mouseX = MouseInfo.getPointerInfo().getLocation().x;
-			int mouseY = MouseInfo.getPointerInfo().getLocation().y;
-			
-			rects.get(i).setX(mouseX-(rects.get(i).getWidth()/2));
-			rects.get(i).setY(mouseY-65+prevHeight);
-			
-			textAreas.get(i).setLayoutX(mouseX-(rects.get(i).getWidth()/2));
-			textAreas.get(i).setLayoutY(mouseY-65+prevHeight);
+		Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
-			prevHeight = prevHeight + rects.get(i).getHeight();
+		int mouseX = MouseInfo.getPointerInfo().getLocation().x;
+		int mouseY = MouseInfo.getPointerInfo().getLocation().y;
+		
+		double boundX = pane.getScene().getX();
+		double boundY = pane.getScene().getY();
+		double boundWidth = pane.getScene().getWidth();
+		double boundHeight = pane.getScene().getHeight();
+		
+		double toolboxWidth = primaryScreenBounds.getWidth() / 12;
+		double editHeight = primaryScreenBounds.getHeight() / 20;
+
+		double rectHeight = DEFAULT_RECT_ONE_H;
+		
+		if (size > 1) {
+			rectHeight = rectHeight + DEFAULT_RECT_TWO_H;
+		}
+		if (size > 2) {
+			rectHeight = rectHeight + DEFAULT_RECT_THREE_H;
+		}
+		if (size > 3) {
+			rectHeight = rectHeight + DEFAULT_RECT_FOUR_H;
+		}
+		
+		if (mouseX > (boundX + toolboxWidth+(DEFAULT_RECT_WIDTH/2))) {
+			if (mouseY > boundY+editHeight+(DEFAULT_RECT_ONE_H/2)) {
+				if (mouseX < boundX+boundWidth-(DEFAULT_RECT_WIDTH/2)) {
+					if (mouseY < boundY+boundHeight-(rectHeight)) {
+					//Loop through rectangles and textAreas and set position of each
+						for(int i = 0; i < rects.size(); i++)
+						{
+							
+							rects.get(i).setX(mouseX-(rects.get(i).getWidth()/2));
+							rects.get(i).setY(mouseY-65+prevHeight);
+							
+							textAreas.get(i).setLayoutX(mouseX-(rects.get(i).getWidth()/2));
+							textAreas.get(i).setLayoutY(mouseY-65+prevHeight);
+				
+							prevHeight = prevHeight + rects.get(i).getHeight();
+						}
+					}
+				}
+			}
 		}
 	}
 	
@@ -276,16 +332,16 @@ public class ClassBox{
 		switch (size) {
 		
 		case 1:
-			r = createRect(posX,posY,DEFAULT_RECT_WIDTH,DEFAULT_RECT_ONE_H,DEFAULT_ARC_DIM, FILL_COLOR, currStroke, DEFAULT_STROKE_WIDTH);
+			r = createRect(posX,posY,DEFAULT_RECT_WIDTH,DEFAULT_RECT_ONE_H,DEFAULT_ARC_DIM, FILL_COLOR, currStroke, DEFAULT_STROKE_WIDTH, pane);
 			ta = createText(posX, posY, DEFAULT_RECT_WIDTH, DEFAULT_RECT_ONE_H);
 		case 2:
-			r = createRect(posX,posY,DEFAULT_RECT_WIDTH,DEFAULT_RECT_TWO_H,DEFAULT_ARC_DIM, FILL_COLOR, currStroke, DEFAULT_STROKE_WIDTH);
+			r = createRect(posX,posY,DEFAULT_RECT_WIDTH,DEFAULT_RECT_TWO_H,DEFAULT_ARC_DIM, FILL_COLOR, currStroke, DEFAULT_STROKE_WIDTH, pane);
 			ta = createText(posX, posY, DEFAULT_RECT_WIDTH, DEFAULT_RECT_ONE_H);
 		case 3:
-			r = createRect(posX,posY,DEFAULT_RECT_WIDTH,DEFAULT_RECT_THREE_H,DEFAULT_ARC_DIM, FILL_COLOR, currStroke, DEFAULT_STROKE_WIDTH);
+			r = createRect(posX,posY,DEFAULT_RECT_WIDTH,DEFAULT_RECT_THREE_H,DEFAULT_ARC_DIM, FILL_COLOR, currStroke, DEFAULT_STROKE_WIDTH, pane);
 			ta = createText(posX, posY, DEFAULT_RECT_WIDTH, DEFAULT_RECT_ONE_H);
 		default:
-			r = createRect(posX,posY,DEFAULT_RECT_WIDTH,DEFAULT_RECT_FOUR_H,DEFAULT_ARC_DIM, FILL_COLOR, currStroke, DEFAULT_STROKE_WIDTH);
+			r = createRect(posX,posY,DEFAULT_RECT_WIDTH,DEFAULT_RECT_FOUR_H,DEFAULT_ARC_DIM, FILL_COLOR, currStroke, DEFAULT_STROKE_WIDTH, pane);
 			ta = createText(posX, posY, DEFAULT_RECT_WIDTH, DEFAULT_RECT_ONE_H);
 		}
 		
@@ -304,8 +360,13 @@ public class ClassBox{
 		
 		int index = rects.indexOf(rect);
 
+//		textAreas.get(index).setEditable(true);
 		textAreas.get(index).requestFocus();
 	}
+//	public void unselectText (Rectangle rect) {
+//		int index = rects.indexOf(rect);
+//		textAreas.get(index).setEditable(false);
+//	}
 	
 	/***
 	 * clears the ClassBox and pane of all rectangles and textAreas.
@@ -326,15 +387,18 @@ public class ClassBox{
 	
 	/***
 	 * returns the size
-	 * This needs to be called before deleting a ClassBox
 	 * @param pane
 	 */
 	public int size () {
 		return size;
 	}
 	
-	public void anchorUpdate (Pane pane, boolean updateAnchors, boolean remove, boolean removeAll)
+	public void anchorUpdate (Pane pane, boolean updateAnchors, boolean remove, boolean removeAll, List<ClassBoxConnector> connectors)
 	{	
+		
+		List<ClassBoxConnector> myConnectors = new ArrayList();
+		ArrayList<Integer> positions = new ArrayList();
+		ArrayList<Integer> connectSide = new ArrayList();
 		
 		if (removeAll)
 		{
@@ -353,6 +417,22 @@ public class ClassBox{
 		
 		if (updateAnchors)
 		{
+			for (ClassBoxConnector connector: connectors) {
+				for(Anchor anchor : anchors) {
+					if (connector.getStartAnchor().equals(anchor)) {
+						myConnectors.add(connector);
+						positions.add(anchor.getPosition());
+						connectSide.add(1);
+						System.out.print("1");
+					}
+					if (connector.getEndAnchor().equals(anchor)) {
+						myConnectors.add(connector);
+						positions.add(anchor.getPosition());
+						connectSide.add(2);
+						System.out.print("2");
+					}
+				}
+			}
 			pane.getChildren().removeAll(anchors);
 			anchors.clear();
 			if(remove)
@@ -372,10 +452,10 @@ public class ClassBox{
 			}
 		}
 		
-		Anchor anch1 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(0));
-		Anchor anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H / 2));
-		Anchor anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H / 2));
-		Anchor anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H));
+		Anchor anch1 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(0),pane,1);
+		Anchor anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H / 2),pane,2);
+		Anchor anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H / 2),pane,3);
+		Anchor anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H),pane,4);
 		
 		switch (size) {
 		
@@ -389,9 +469,9 @@ public class ClassBox{
 				}
 				else if (!remove && !removeAll)
 				{
-					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2));
-					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2));
-					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H));
+					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2),pane,2);
+					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2),pane,3);
+					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H),pane,4);
 				}
 			}
 			break;
@@ -402,23 +482,23 @@ public class ClassBox{
 			{
 				if(remove && !removeAll)
 				{
-					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H / 2));
-					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H / 2));
-					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H));
+					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H / 2),pane,2);
+					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H / 2),pane,3);
+					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H),pane,4);
 				}
 				else if (!remove && !removeAll)
 				{
-					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2));
-					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2));
-					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H));
+					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2),pane,2);
+					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2),pane,3);
+					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H),pane,4);
 				}
 			}
 			else
 			{
-				anch1 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(0));
-				anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2));
-				anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2));
-				anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H));
+				anch1 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(0),pane,1);
+				anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2),pane,2);
+				anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2),pane,3);
+				anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H),pane,4);
 			}
 			
 			break;
@@ -429,23 +509,23 @@ public class ClassBox{
 			{
 				if(remove && !removeAll)
 				{
-					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2));
-					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2));
-					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H));
+					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2),pane,2);
+					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H) / 2),pane,3);
+					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H),pane,4);
 				}
 				else if (!remove && !removeAll)
 				{
-					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H) / 2));
-					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H) / 2));
-					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H));
+					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H) / 2),pane,2);
+					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H) / 2),pane,3);
+					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H),pane,4);
 				}
 			}
 			else
 			{
-				anch1 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(0));
-				anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2));
-				anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2));
-				anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H));
+				anch1 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(0),pane,1);
+				anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2),pane,2);
+				anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2),pane,3);
+				anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H),pane,4);
 			}
 				
 			break;
@@ -456,9 +536,9 @@ public class ClassBox{
 			{
 				if(remove && !removeAll)
 				{
-					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2));
-					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2));
-					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H));
+					anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2),pane,2);
+					anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H) / 2),pane,3);
+					anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H),pane,4);
 				}
 				else if (!remove && !removeAll)
 				{
@@ -467,15 +547,61 @@ public class ClassBox{
 			}
 			else
 			{
-				anch1 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(0));
-				anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H) / 2));
-				anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H) / 2));
-				anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H));
+				anch1 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(0),pane,1);
+				anch2 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H) / 2),pane,2);
+				anch3 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(0), rects.get(0).yProperty().add((DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H) / 2),pane,3);
+				anch4 = new Anchor(Color.DARKRED, rects.get(0).xProperty().add(DEFAULT_RECT_WIDTH / 2), rects.get(0).yProperty().add(DEFAULT_RECT_ONE_H + DEFAULT_RECT_TWO_H + DEFAULT_RECT_THREE_H + DEFAULT_RECT_FOUR_H),pane,4);
 			}
 			
 			break;
 		}
 		
+		}
+		
+		for (int i = 0; i < myConnectors.size(); i++) {
+			ClassBoxConnector connector = myConnectors.get(i);
+			int pos = positions.get(i);
+			int side = connectSide.get(i);
+			System.out.print(side);
+			switch(pos){
+			
+			case 1:
+				if (side == 1) {
+					connector.bindStart(anch1);
+					connector.setStartAnchor(anch1);
+				}else {
+					connector.bindEnd(anch1);
+					connector.setEndAnchor(anch1);
+				}
+				break;
+			case 2:
+				if (side == 1) {
+					connector.bindStart(anch2);
+					connector.setStartAnchor(anch2);
+				}else {
+					connector.bindEnd(anch2);
+					connector.setEndAnchor(anch2);
+				}
+				break;
+			case 3:
+				if (side == 1) {
+					connector.bindStart(anch3);
+					connector.setStartAnchor(anch3);
+				}else {
+					connector.bindEnd(anch3);
+					connector.setEndAnchor(anch3);
+				}
+				break;
+			default:
+				if (side == 1) {
+					connector.bindStart(anch4);
+					connector.setStartAnchor(anch4);
+				}else {
+					connector.bindEnd(anch4);
+					connector.setEndAnchor(anch4);
+				}
+				break;
+			}
 		}
 		
 		if (!removeAll)
